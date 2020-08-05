@@ -1,0 +1,643 @@
+---
+title: "Cyprus Air Pollution January-June 2020 Analysis"
+author: "Stavros Oikonomou"
+date: "2/8/2020"
+output: html_document
+---
+### Loading the libraries we gonna use
+```{r,warning=FALSE,message=FALSE}
+library(dplyr)
+library(tidyjson)
+library(rjson)
+library(lubridate)
+library(GGally)
+library(ggplot2)
+library(xts)
+library(zoo)
+library(data.table)
+library(heatmaply)
+library(reshape2)
+library(factoextra)
+library(pca3d)
+library(forecast)
+```
+
+### Loading the datasets, one for each month
+```{r,eval=F, echo=T}
+jan <- fromJSON(file="https://www.airquality.dli.mlsi.gov.cy/all_stations_data_range/2020-01-01 00:00/2020-01-31 23:59")
+feb <- fromJSON(file="https://www.airquality.dli.mlsi.gov.cy/all_stations_data_range/2020-02-01 00:00/2020-02-31 23:59")
+mar <- fromJSON(file="https://www.airquality.dli.mlsi.gov.cy/all_stations_data_range/2020-03-01 00:00/2020-03-31 23:59")
+apr <- fromJSON(file="https://www.airquality.dli.mlsi.gov.cy/all_stations_data_range/2020-04-01 00:00/2020-04-31 23:59")
+may <- fromJSON(file="https://www.airquality.dli.mlsi.gov.cy/all_stations_data_range/2020-05-01 00:00/2020-05-31 23:59")
+jun <- fromJSON(file="https://www.airquality.dli.mlsi.gov.cy/all_stations_data_range/2020-06-01 00:00/2020-06-31 23:59")
+```
+## Extracting the values
+
+#### We gonna extract the values from our dataset. We gonna create tables for every station for all six months. 
+#### We gonna use the tidyjson library and spread_all function to spread the values and create a matrix in which
+#### every row is a hourly measures and details for all types of pollution. Then we gonna save the matrix as .csv file.
+
+#### Station 1
+```{r,eval=F, echo=T}
+# creating the list of values for station 1 for all six months
+station1 <- c(jan$data$station_1$values,feb$data$station_1$values,mar$data$station_1$values,
+          apr$data$station_1$values,may$data$station_1$values,jun$data$station_1$values)
+station1 <- station1 %>% spread_all() # spreading the list to one data.frame
+station1$..JSON <- NULL # deleting the last column
+write.csv(station1,"station1.csv",row.names = F) # saving the data.frame
+```
+#### Station 2
+```{r,eval=F, echo=T}
+station2 <- c(jan$data$station_2$values,feb$data$station_2$values,mar$data$station_2$values,
+          apr$data$station_2$values,may$data$station_2$values,jun$data$station_2$values)
+station2 <- station2 %>% spread_all()
+station2$..JSON <- NULL
+write.csv(station2,"station2.csv", row.names = F)
+
+```
+#### Station 3
+```{r,eval=F, echo=T}
+station3 <- c(jan$data$station_3$values,feb$data$station_3$values,mar$data$station_3$values,
+              apr$data$station_3$values,may$data$station_3$values,jun$data$station_3$values)
+station3 <- station3 %>% spread_all()
+station3$..JSON <- NULL
+write.csv(station3,"station3.csv", row.names = F)
+```
+#### Station 5
+```{r,eval=F, echo=T}
+station5 <- c(jan$data$station_5$values,feb$data$station_5$values,mar$data$station_5$values,
+              apr$data$station_5$values,may$data$station_5$values,jun$data$station_5$values)
+station5 <- station5 %>% spread_all()
+station5$..JSON <- NULL
+write.csv(station5,"station5.csv", row.names = F)
+```
+#### Station 7
+```{r,eval=F, echo=T}
+station7 <- c(jan$data$station_7$values,feb$data$station_7$values,mar$data$station_7$values,
+              apr$data$station_7$values,may$data$station_7$values,jun$data$station_7$values)
+station7 <- station7 %>% spread_all()
+station7$..JSON <- NULL
+write.csv(station7,"station7.csv", row.names = F)
+```
+#### Station 8
+```{r,eval=F, echo=T}
+station8 <- c(jan$data$station_8$values,feb$data$station_8$values,mar$data$station_8$values,
+              apr$data$station_8$values,may$data$station_8$values,jun$data$station_8$values)
+station8 <- station5 %>% spread_all()
+station8$..JSON <- NULL
+write.csv(station8,"station8.csv", row.names = F)
+```
+#### Station 9
+```{r,eval=F, echo=T}
+station9 <- c(jan$data$station_9$values,feb$data$station_9$values,mar$data$station_9$values,
+              apr$data$station_9$values,may$data$station_9$values,jun$data$station_9$values)
+station9 <- station5 %>% spread_all()
+station9$..JSON <- NULL
+write.csv(station9,"station9.csv", row.names = F)
+```
+#### Station 10
+```{r,eval=F, echo=T}
+station10 <- c(jan$data$station_10$values,feb$data$station_10$values,mar$data$station_10$values,
+              apr$data$station_10$values,may$data$station_10$values,jun$data$station_10$values)
+station10 <- station5 %>% spread_all()
+station10$..JSON <- NULL
+write.csv(station10,"station10.csv", row.names = F)
+```
+#### Station 11
+```{r,eval=F, echo=T}
+station11 <- c(jan$data$station_11$values,feb$data$station_11$values,mar$data$station_11$values,
+              apr$data$station_11$values,may$data$station_11$values,jun$data$station_11$values)
+station11 <- station5 %>% spread_all()
+station11$..JSON <- NULL
+write.csv(station11,"station11.csv", row.names = F)
+```
+
+#### creating a vector with stations names
+```{r}
+stations <- c("Nicosia_Traf","Nicosia_Resi","Limassol_Traf","Larnaca_Traf","Paphos_Traf",
+              "Zygi_Indu","Mari_Indu","Ayia_Marina_Xylianou_Back","Paralimni_Traf")
+```
+
+## Data preprocessing
+#### We gonna load the datasets for every station, filter the columns and keep the values for every pollutant type. We'll change the class of time to POSIXct, check for NAs and fill them using na.approx function
+
+#### Station 1
+```{r}
+s1 <- read.csv("station1.csv") # Loading the .csv file we previous create
+s1 <- s1 %>% select(c(seq(2,38,4))) # Filtering the columns with pollutant values
+names(s1) <- c("time","SO2","PM10","O3","NO2","NOx","CO","C6H6","NO","PM25") #adding the column names
+s1$time <- ymd_hms(s1$time) # changing the type of time
+sapply(s1, function(x) sum(is.na(x))) # checking for NA
+# Filling NA with na.approx function
+s1[,2:10] <- sapply(s1[,2:10], function(x) ifelse(is.na(x), na.approx(x, na.rm = T), x))
+sapply(s1, function(x) sum(is.na(x))) # zero NA
+knitr::kable(head(s1,3)) # printing the first 3 rows
+```
+
+#### Station 2
+```{r}
+s2 <- read.csv("station2.csv")
+s2 <- s2 %>% select(c(seq(2,26,4)))
+names(s2) <- c("time","SO2","O3","NO2","NOx","CO","NO")
+s2$time <- ymd_hms(s2$time)
+sapply(s2, function(x) sum(is.na(x)))
+s2[,2:7] <- sapply(s2[,2:7], function(x) ifelse(is.na(x), na.approx(x, na.rm = TRUE), x))
+```
+#### Station 3
+```{r}
+s3 <- read.csv("station3.csv")
+s3 <- s3 %>% select(c(seq(2,30,4)))
+names(s3) <- c("time","SO2","PM10","O3","NO2","NOx","CO","NO")
+s3$time <- ymd_hms(s3$time)
+sapply(s3, function(x) sum(is.na(x)))
+s3[,2:8] <- sapply(s3[,2:8], function(x) ifelse(is.na(x), na.approx(x, na.rm = TRUE), x))
+```
+#### Station 5
+```{r}
+s5 <- read.csv("station5.csv")
+s5 <- s5 %>% select(c(seq(2,38,4)))
+names(s5) <- c("time","SO2","PM10","O3","NO2","NOx","CO","C6H6","NO","PM25")
+s5$time <- ymd_hms(s5$time)
+sapply(s5, function(x) sum(is.na(x)))
+s5[,2:10] <- sapply(s5[,2:10], function(x) ifelse(is.na(x), na.approx(x, na.rm = TRUE), x))
+```
+#### Station 7
+```{r}
+s7 <- read.csv("station7.csv")
+s7 <- s7 %>% select(c(seq(2,38,4)))
+names(s7) <- c("time","SO2","PM10","O3","NO2","NOx","CO","C6H6","NO","PM25")
+s7$time <- ymd_hms(s7$time)
+sapply(s7, function(x) sum(is.na(x)))
+s7[,2:10] <- sapply(s7[,2:10], function(x) ifelse(is.na(x), na.approx(x, na.rm = TRUE), x))
+```
+#### Station 8
+```{r}
+s8 <- read.csv("station8.csv")
+s8 <- s8 %>% select(c(seq(2,34,4)))
+names(s8) <- c("time","SO2","PM10","O3","NO2","NOx","C6H6","NO","PM25")
+s8$time <- ymd_hms(s8$time)
+sapply(s8, function(x) sum(is.na(x)))
+s8[,2:9] <- sapply(s8[,2:9], function(x) ifelse(is.na(x), na.approx(x, na.rm = TRUE), x))
+```
+#### Station 9
+```{r}
+s9 <- read.csv("station9.csv")
+s9 <- s9 %>% select(c(seq(2,30,4)))
+names(s9) <- c("time","SO2","O3","NO2","NOx","CO","C6H6","NO")
+s9$time <- ymd_hms(s9$time)
+sapply(s9, function(x) sum(is.na(x)))
+s9[,2:8] <- sapply(s9[,2:8], function(x) ifelse(is.na(x), na.approx(x, na.rm = TRUE), x))
+```
+#### Station 10
+```{r}
+s10 <- read.csv("station10.csv")
+s10 <- s10 %>% select(c(seq(2,38,4)))
+names(s10) <- c("time","SO2","PM10","O3","NO2","NOx","CO","C6H6","PM25","NO")
+s10$time <- ymd_hms(s10$time)
+sapply(s10, function(x) sum(is.na(x)))
+s10[,2:10] <- sapply(s10[,2:10], function(x) ifelse(is.na(x), na.approx(x, na.rm = TRUE), x))
+```
+#### Station 11
+```{r}
+s11 <- read.csv("station11.csv")
+s11 <- s11 %>% select(c(seq(2,34,4)))
+names(s11) <- c("time","SO2","O3","NO2","NOx","CO","NO","PM10","PM25")
+s11$time <- ymd_hms(s11$time)
+sapply(s11, function(x) sum(is.na(x)))
+s11[,2:9] <- sapply(s11[,2:9], function(x) ifelse(is.na(x), na.approx(x, na.rm = TRUE), x))
+```
+
+## Changing the time
+#### Next step is gonna be to change the time. Our dataset is in hours so we gonna create two new datasets for every station in which we gonna store mean value for each day and for each month. First we'll transform the datasets to xts type and then create .d and .m datasets for days and months.
+
+#### Station 1
+```{r}
+s1.xts <- xts(s1, order.by = s1$time) # creating the xts type of s1 dataset
+s1.d <- period.apply(s1.xts[,2:10] , endpoints(s1.xts, "days"), mean) #finding the mean for every day
+s1.m <- period.apply(s1.xts[,2:10] , endpoints(s1.xts, "months"), mean) #finding the mean for every month
+s1.d <- as.data.frame(s1.d) # changing for xts to data.frame type
+s1.m <- as.data.frame(s1.m) # changing for xts to data.frame type
+```
+#### Station 2
+```{r}
+s2.xts <- xts(s2, order.by = s2$time)
+s2.d <- period.apply(s2.xts[,2:7] , endpoints(s2.xts, "days"), mean)
+s2.m <- period.apply(s2.xts[,2:7] , endpoints(s2.xts, "months"), mean)
+s2.d <- as.data.frame(s2.d)
+s2.m <- as.array.default(s2.m)
+# Creating a time column to join the datasets later. Only for the stations with missing days
+s2.d$time <- as.POSIXct(row.names(s2.d),format = "%Y-%m-%d")
+```
+#### Station 3
+```{r}
+s3.xts <- xts(s3, order.by = s3$time)
+s3.d <- period.apply(s3.xts[,2:8] , endpoints(s3.xts, "days"), mean)
+s3.m <- period.apply(s3.xts[,2:8] , endpoints(s3.xts, "months"), mean)
+s3.d <- as.data.frame(s3.d)
+s3.m <- as.data.frame(s3.m)
+```
+#### Station 5
+```{r}
+s5.xts <- xts(s5, order.by = s5$time)
+s5.d <- period.apply(s5.xts[,2:10] , endpoints(s5.xts, "days"), mean)
+s5.m <- period.apply(s5.xts[,2:10] , endpoints(s5.xts, "months"), mean)
+s5.d <- as.data.frame(s5.d)
+s5.m <- as.data.frame(s5.m)
+```
+#### Station 7
+```{r}
+s7.xts <- xts(s7, order.by = s7$time)
+s7.d <- period.apply(s7.xts[,2:10] , endpoints(s7.xts, "days"), mean)
+s7.m <- period.apply(s7.xts[,2:10] , endpoints(s7.xts, "months"), mean)
+s7.d <- as.data.frame(s7.d)
+s7.m <- as.data.frame(s7.m)
+s7.d$time <- as.POSIXct(row.names(s7.d),format = "%Y-%m-%d")
+```
+#### Station 8
+```{r}
+s8.xts <- xts(s8, order.by = s8$time)
+s8.d <- period.apply(s8.xts[,2:9] , endpoints(s8.xts, "days"), mean)
+s8.m <- period.apply(s8.xts[,2:9] , endpoints(s8.xts, "months"), mean)
+s8.d <- as.data.frame(s8.d)
+s8.m <- as.data.frame(s8.m)
+s8.d$time <- as.POSIXct(row.names(s8.d),format = "%Y-%m-%d")
+```
+#### Station 9
+```{r}
+s9.xts <- xts(s9, order.by = s9$time)
+s9.d <- period.apply(s9.xts[,2:8] , endpoints(s9.xts, "days"), mean)
+s9.m <- period.apply(s9.xts[,2:8] , endpoints(s9.xts, "months"), mean)
+s9.d <- as.data.frame(s9.d)
+s9.m <- as.data.frame(s9.m)
+```
+#### Station 10
+```{r}
+s10.xts <- xts(s10, order.by = s10$time)
+s10.d <- period.apply(s10.xts[,2:10] , endpoints(s10.xts, "days"), mean)
+s10.m <- period.apply(s10.xts[,2:10] , endpoints(s10.xts, "months"), mean)
+s10.d <- as.data.frame(s10.d)
+s10.m <- as.data.frame(s10.m)
+```
+#### Station 11
+```{r}
+s11.xts <- xts(s11, order.by = s11$time)
+s11.d <- period.apply(s11.xts[,2:9] , endpoints(s11.xts, "days"), mean)
+s11.m <- period.apply(s11.xts[,2:9] , endpoints(s11.xts, "months"), mean)
+s11.d <- as.data.frame(s11.d)
+s11.m <- as.data.frame(s11.m)
+```
+
+#### deleting the datasets we dont gonna use
+```{r,warning=FALSE,message=FALSE}
+rm(s1,s1.xts,s10, s10.xts, s11, s11.xts,s2,s2.xts,s3, s3.xts, s5, s5.xts, 
+   s7, s7.xts, s8, s8.xts,s9, s9.xts, s10, s10.xts, s11, s11.xts)
+```
+
+
+## PM10 Analysis
+### Creating the dataframe for pm10 with day columns
+```{r}
+# Creating a data.frame with all pm10 measurement values. Stations 1,3,5,10 and 11 have no missing days
+pm10 <- data.frame("station1"=s1.d$PM10,"station3"=s3.d$PM10,"station5"=s5.d$PM10,
+                   "station10"=s10.d$PM10,"station11"=s11.d$PM10)
+# Creating a time column to help us join previous dataframe with station 7 and 8.
+pm10$time <- as.POSIXct(row.names(s1.d),format = "%Y-%m-%d")
+# Full join pm10 and station7 by time column
+pm10 <- full_join(pm10,s7.d[,c("time","PM10")],by="time")
+# Full join pm10 and station8 by time column
+pm10 <- full_join(pm10,s8.d[,c("time","PM10")],by="time")
+# Changing the column names, changing the order and filling NAs at station 7 and 8 with mean values
+pm10 <- pm10 %>% rename(station7=PM10.x, station8=PM10.y) %>%
+  select(time,station1,station3,station5,station7,station8,station10,station11) %>%
+  mutate(station7=ifelse(is.na(station7),mean(station7, na.rm=T),station7),
+         station8=ifelse(is.na(station8),mean(station8, na.rm=T),station8)) 
+# Adding a mean column with mean value of PM10 for every day
+pm10$mean <- rowMeans(pm10[,2:8])
+knitr::kable(head(pm10,3)) # printing the first 3 columns
+```
+
+### Creating the dataframe for pm10 with monthly columns
+```{r}
+# adding the values to dataframe
+pm10.m <- data.frame(s1.m$PM10,s3.m$PM10,s5.m$PM10,s7.m$PM10,
+                     s8.m$PM10,s10.m$PM10,s11.m$PM10)
+# Creating a column with mean values for every month
+pm10.m$mean <- rowMeans(pm10.m)
+# Adding row and column names
+rownames(pm10.m) <- c("January","February","March","April","May","June") 
+colnames(pm10.m) <- c(stations[c(1,3:6,8:9)],"mean")
+knitr::kable(pm10.m, digits = 4) #printing the table
+```
+
+### Summary statistics of PM10 for each station
+```{r}
+colnames(pm10) <- c("time",stations[c(1,3:6,8:9)],"mean")
+knitr::kable(do.call(cbind, lapply(pm10[2:9], summary)))
+```
+
+#### Data preperation 
+```{r,warning=FALSE,message=FALSE}
+pm10.t <- as.data.frame(t(as.matrix(pm10))) # transpose the pm10 matrix
+# changing row and column names
+rownames(pm10.t) <- c("time",stations[c(1,3:6,8:9)],"mean")
+colnames(pm10.t) <- pm10$time
+pm10.bar2 <- pm10.t[2:8,]
+pm10.bar2$row.names <- rownames(pm10.bar2)
+# changing the data from wide format to a single column of data
+pm10.bar2<-melt(pm10.bar2,id=c("row.names"))
+# Changing the type of class
+pm10.bar2$value <- as.numeric(pm10.bar2$value)
+pm10.bar2$variable <- ymd(pm10.bar2$variable)
+pm10.bar2$row.names <- as.factor(pm10.bar2$row.names)
+```
+
+
+### Boxplot for each station
+```{r}
+ggplot(data = pm10.bar2, aes(x = row.names, y = value, fill=row.names)) +geom_boxplot() +
+  theme(legend.position = "none") + labs(title="PM10 boxplot for all stations", x="Stations",y="PM10") +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1))
+
+```
+
+
+### PM10 time series. 
+#### The green line is the air quality guideline from WHO and the pink line is the established EU limit value. The dashed orange line is the date Cyprus banned the flights and the red dashed line is the date the lockdown started. We can see there are some peaks as a result of [dust episodes](https://www.airquality.dli.mlsi.gov.cy/el/epeisodio-skonis-19-maioy-2020). We can see that COVID19 situation did not affect the values of PM10.
+```{r,warning=FALSE,message=FALSE}
+ggplot(pm10, aes(x=time,y=mean)) + geom_line() + geom_smooth() +
+  geom_vline(aes(xintercept=as.numeric(pm10$time[84]),colour="Lockdown"),linetype=2, size=1) +
+  geom_vline(aes(xintercept=as.numeric(pm10$time[81]),colour="Flight_ban"),linetype=2, size=1) +
+  labs(y="PM10 value", x="Month",title="January to June 2020 Time series for PM10") + 
+  geom_hline(aes(yintercept = 40, colour="EU_limit_value"), linetype=1) +
+  geom_hline(aes(yintercept = 20, colour="WHO_air_quality_guideline"), linetype=1) +
+  scale_color_manual(name = "Line notation", values = c(Lockdown="red",EU_limit_value="magenta",
+                           WHO_air_quality_guideline="green",Flight_ban="orange")) +
+  theme_classic() +
+  annotate("text",x=pm10$time[140],y = 95,label="Dust Episode", size =4, fontface="bold", color="brown" )
+```
+
+
+
+### Time Series plot for every station 
+```{r}
+ggplot(pm10.bar2, aes(x=variable,y=as.numeric(value))) + geom_area(aes(color = row.names, fill = row.names),
+    alpha = 0.7) + theme_bw() +
+    labs(y="PM10 value", x="Month",title="January to June 2020 PM10 Time series for every station") +
+    labs(fill='Station') + labs(color="Station") 
+```
+
+```{r}
+ggplot(pm10.bar2, aes(x=variable,y=as.numeric(value))) + geom_line(aes(color = row.names),
+    alpha = 0.7, size=0.7) + theme_classic() +
+    labs(y="PM10 value", x="Month",title="January to June 2020 PM10 Time series for every station") +
+    labs(color="Station") 
+```
+
+### PM10 daily difference
+#### COVID19 situation doesn't change the stability of PM10 and the differences seems to be almost the same before and after lockdown. The highest differences can be spotted the first 2 weeks after lockdown.
+```{r}
+pm10.ts <- ts(pm10[9], start=c(2020,1) , frequency = 365)
+pm10.diff <- diff(pm10.ts)
+pm10.dif <- data.frame("time"=pm10$time,"diff"=c(0,pm10.diff)) 
+ggplot(pm10.dif, aes(x=time,y=diff))+geom_line(color=I("red")) + xlab("Months")+ ylab("PM10 difference") +
+  ggtitle("PM10 daily difference") + theme_classic() + geom_hline(yintercept = 0, linetype="dashed")
+```
+
+### Heatmap plot of monthly values
+```{r}
+pm10.mt <- as.data.frame(t(as.matrix(pm10.m))) ##transpose of month matrix
+rownames(pm10.mt) <- c(stations[c(1,3:6,8:9)],"mean") #adding row names
+heatmaply(pm10.mt, grid_color = "white", dendrogram = "none", main = "PM10 per month for all Stations and mean values",xlab = "Months",ylab="Stations",cellnote = round(pm10.mt,2))
+```
+
+### Barplot of PM10 for every month and visual contribution of each station
+```{r}
+pm10.bar <- pm10.mt[1:7,] # row filtering
+pm10.bar$row.names <- rownames(pm10.bar) # adding column with row names
+# changing the data from wide format to a single column of data
+pm10.bar<-melt(pm10.bar,id=c("row.names"))
+# creating the plot
+ggplot(pm10.bar,aes(x=variable,y=value/7,fill=row.names))+geom_bar(position="stack", stat="identity") +
+  labs(title = "PM10 per month and station contribution", y = "PM10 value", x = "Months") +
+  labs(fill = "Stations")
+
+```
+
+
+
+### Hierarchical Analysis
+#### I choose to create three clusters. The clusters seems to be very reasonal. The green cluster includes four of five traffic stations. The red includes only Ayia_Marina_Xyliaroy station, the only Rural Station of our dataset and the blue includes Paphos traffic station and Zygi industrial station.
+```{r}
+pm10.t2 <- as.data.frame(t(as.matrix(pm10[,2:8])))
+row.names(pm10.t2)<- stations[c(1,3:6,8:9)]
+pm10.t2$station <- stations[c(1,3:6,8:9)]
+pm10.scaled <- as.data.frame(scale(pm10.t2[,1:182])) # scaling
+dist_pm10 <- dist(pm10.scaled, method = 'euclidean') # calculating the distance
+hclust_pm10 <- hclust(dist_pm10, method = 'complete') # creating the HC
+# plotting th dendrogram
+plot(hclust_pm10,labels=pm10.t2$station)
+rect.hclust(hclust_pm10 ,  k = 3,border = 2:6) # adding the 3 cluster boxes
+```
+
+### Elbow rule. 
+#### We can see that a good choice would be to choose k=2
+```{r}
+fviz_nbclust(pm10.scaled, kmeans, method = "wss", k.max=6)
+```
+
+### PCA
+```{r}
+pm10_pca <- prcomp(pm10.t2[,-183], center = TRUE, scale. = TRUE)
+summary(pm10_pca)
+```
+
+#### Cluster plot with PCA
+#### This biplot for the first two principal components, accounting for 64% of the total variance
+```{r}
+sub_grp <- cutree(hclust_pm10, k = 3)
+fviz_cluster(list(data = pm10.scaled, cluster = sub_grp))
+```
+
+
+### PCA 3d plot
+#### This 3d plot for the first three principal components, accounting for 77% of the total variance
+```{r}
+pca3d(pm10_pca, group=sub_grp, radius = 4, show.labels=T)
+```
+![PCA 3d](C:/Users/tit0v/R/cyprus/cyprus/pca3d.png)
+
+## NOx Analysis
+
+### Creating the dataframe for NOx with day columns
+```{r}
+nox <- data.frame("station1"=s1.d$NOx,"station3"=s3.d$NOx ,"station5"=s5.d$NOx , 
+                   "station9"=s9.d$NOx,"station10"=s10.d$NOx,"station11"=s11.d$NOx)
+nox$time <- as.POSIXct(row.names(s1.d),format = "%Y-%m-%d")
+nox <- full_join(nox,s2.d[,c("time","NOx")],by="time")
+nox <- full_join(nox,s7.d[,c("time","NOx")],by="time")
+nox <- full_join(nox,s8.d[,c("time","NOx")],by="time")
+
+nox <- nox %>% rename(station2=NOx.x, station7=NOx.y, station8=NOx) %>%
+  select(time,station1,station2,station3,station5,station7,station8,
+         station9,station10,station11) %>%
+  mutate(station2=ifelse(is.na(station2),mean(station2, na.rm=T),station2),
+         station7=ifelse(is.na(station7),mean(station7, na.rm=T),station7),
+         station8=ifelse(is.na(station8),mean(station8, na.rm=T),station8))
+nox$mean <- rowMeans(nox[,2:10])
+knitr::kable(head(nox,3))
+```
+
+### Creating the dataframe for pm10 with monthly columns
+```{r}
+nox.m <- data.frame(s1.m$NOx,s2.m$NOx,s3.m$NOx,
+                    s5.m$NOx,s7.m$NOx,s8.m$NOx,
+                    s9.m$NOx,s10.m$NOx,s11.m$NOx)
+nox.m$Mean <- rowMeans(nox.m)
+row.names(nox.m)<-c("January","February","March","April","May","June")
+colnames(nox.m)<-c(stations,"Mean")
+knitr::kable(nox.m, digits = 2)
+```
+
+```{r}
+colnames(nox) <- c("time",stations,"mean")
+knitr::kable(do.call(cbind, lapply(nox[2:11], summary)))
+```
+
+#### data preperation
+```{r,warning=FALSE,message=FALSE}
+nox.t <- as.data.frame(t(as.matrix(nox)))
+# changing row and column names
+colnames(nox.t) <- nox$time
+nox.bar <- nox.t[2:10,]
+nox.bar$row.names <- rownames(nox.bar)
+# changing the data from wide format to a single column of data
+nox.bar<-melt(nox.bar,id=c("row.names"))
+nox.bar$value <- as.numeric(nox.bar$value)
+nox.bar$variable <- ymd(nox.bar$variable)
+nox.bar$row.names <- as.factor(nox.bar$row.names)
+
+```
+
+
+### Boxplot for each station
+
+```{r}
+ggplot(data = nox.bar, aes(x = row.names, y = value, fill=row.names)) +geom_boxplot() +
+  theme(legend.position = "none") + labs(title="PM10 boxplot for all stations", x="Stations",y="PM10") +
+  theme(axis.text.x = element_text(angle = 60, hjust = 1))
+```
+
+
+### NOx time series
+
+#### The green line is the air quality guideline from WHO and the pink line is the established EU limit value. The dashed orange line is the date Cyprus banned the flights and the red dashed line is the date the lockdown started. Some peaks are a result of [dust episodes](https://www.airquality.dli.mlsi.gov.cy/el/epeisodio-skonis-19-maioy-2020). We can see that COVID19 situation affect the values of NOx.
+```{r,warning=FALSE,message=FALSE}
+ggplot(nox, aes(x=time,y=mean)) + geom_line() + geom_smooth() +
+  geom_vline(aes(xintercept=as.numeric(pm10$time[84]),colour="Lockdown"),linetype=2, size=1) +
+  geom_vline(aes(xintercept=as.numeric(pm10$time[81]),colour="Flight_ban"),linetype=2, size=1) +
+  geom_hline(aes(yintercept = 30, colour="EU_limit_value"), linetype=1) +
+  geom_hline(aes(yintercept = 40, colour="WHO_air_quality_guideline"), linetype=1) + 
+  labs(y="NOx value", x="Month",title="January to June 2020 Time series for NOx") + 
+  scale_color_manual(name = "statistics", values = c(Lockdown="red",EU_limit_value="magenta",
+                           Flight_ban="orange",WHO_air_quality_guideline="green")) +
+  theme_classic() + 
+  annotate("text",x=pm10$time[140],y = 37,label="Dust Episode", size =4, fontface="bold", color="brown" )
+```
+
+
+
+### Time Series plot for every station
+```{r}
+ggplot(nox.bar, aes(x=variable,y=as.numeric(value))) + geom_area(aes(fill = row.names, colour=row.names),
+    alpha = 0.3) + theme_bw() +
+    labs(y="NOx value", x="Month",title="January to June 2020 NOx Time series for every station") +
+    labs(fill="Station") + labs(colour="Station")
+```
+
+```{r}
+ggplot(nox.bar, aes(x=variable,y=as.numeric(value))) + geom_line(aes(colour=row.names), alpha=0.7, size=0.7) + theme_bw() +
+    labs(y="NOx value", x="Month",title="January to June 2020 NOx Time series for every station") +
+    labs(colour="Station")
+```
+
+### NOx daily difference
+#### After COVID19 situation we can see that the daily difference is low and NOx seems to be more stable.
+
+```{r}
+nox.ts <- ts(nox[11], start=c(2020,1) , frequency = 365)
+nox.diff <- diff(nox.ts)
+nox.diff <- data.frame("time"=nox$time,"diff"=c(0,nox.diff)) 
+ggplot(nox.diff, aes(x=time,y=diff))+geom_line(color=I("red")) + xlab("Months")+ ylab("NOx difference") +
+  ggtitle("NOx daily difference") + theme_classic() + geom_hline(yintercept = 0, linetype="dashed")
+```
+
+
+### Heatmap plot for NOx monthly values for each station
+
+```{r}
+nox.mt <- as.data.frame(t(as.matrix(nox.m)))
+heatmaply(nox.mt, grid_color = "white", dendrogram = "none", main = "NOx per month for all Stations and mean values",xlab = "Months",ylab="Stations",cellnote = round(nox.mt,2))
+```
+
+### Barplot of NOx for every month and visual contribution of each station
+
+```{r}
+nox.bar2 <- nox.mt[1:9,]
+nox.bar2$row.names <- rownames(nox.bar2) # adding column with row names
+# changing the data from wide format to a single column of data
+nox.bar2<-melt(nox.bar2,id=c("row.names"))
+# creating the plot
+ggplot(nox.bar2,aes(x=variable,y=value/9,fill=row.names))+geom_bar(position="stack", stat="identity") +
+  labs(title = "NOx per month and station contribution", y = "NOx value", x = "Months") +
+  labs(fill = "Stations")
+```
+
+### Hierarchical Analysis
+#### Performing a Hierarchical Cluster analysis, calculating the distance between two points using euclidean distance and complete method to calculate the distance between clusters. Ayia Marina Xylianou has her own cluster, the red cluster includes the traffic stations of the three big cities of Cyprus and the blue cluster includes the traffic station of smallers cities like Paralimni and Paphos, the industrial stations and the Nicosia residential station. We can assume red cluster has the highest NOx values, green cluster has the lowest NOx values and blue cluster has NOx values between green and red.
+```{r}
+nox.t2 <- as.data.frame(t(as.matrix(nox[,2:10])))
+nox.t2$station <- stations
+nox.scaled <- as.data.frame(scale(nox.t2[,1:182]))
+dist_nox <- dist(nox.scaled, method = 'euclidean') # calculating the distance
+hclust_nox <- hclust(dist_nox, method = 'complete') # creating the HC
+# plotting th dendrogram
+plot(hclust_nox,labels=nox.t2$station)
+rect.hclust(hclust_nox ,  k = 3,border = 2:6) # adding the 3 cluster boxes
+```
+
+### Elbow rule for NOx
+
+```{r}
+fviz_nbclust(nox.scaled, kmeans, method = "wss", k.max=8)
+```
+
+### PCA
+
+```{r}
+nox_pca <- prcomp(nox.t2[,-183], center = TRUE, scale. = TRUE)
+summary(nox_pca)
+```
+
+### Cluster plot with PCA
+#### This biplot for the first two principal components, accounting for 79% of the total variance
+```{r}
+sub_grp2 <- cutree(hclust_nox, k = 3)
+fviz_cluster(list(data = nox.scaled, cluster = sub_grp2))
+```
+
+### PCA 3d plot
+#### This 3d plot for the first three principal components, accounting for 86% of the total variance
+
+```{r}
+pca3d(nox_pca, group=sub_grp2, radius = 4, show.labels=T)
+```
+
+![NOx PCA 3d](C:/Users/tit0v/R/cyprus/cyprus/pca3dnox.png)
+
+
+
+
+
+
+
+
