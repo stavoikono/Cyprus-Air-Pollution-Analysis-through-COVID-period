@@ -20,6 +20,8 @@ library(reshape2)
 library(factoextra)
 library(pca3d)
 library(forecast)
+library(caret)
+library(corrplot)
 ```
 
 ### Loading the datasets, one for each month
@@ -633,6 +635,95 @@ pca3d(nox_pca, group=sub_grp2, radius = 4, show.labels=T)
 ```
 
 ![NOx PCA 3d](C:/Users/tit0v/R/cyprus/cyprus/pca3dnox.png)
+
+### Loading the covid database
+
+```{r}
+covid <- read.csv("owid-covid-data.csv")
+covid <- covid %>% filter(location=="Cyprus") # filtering the Cyprus data
+covid$date <- ymd(covid$date) # changing the date class
+```
+
+#### Joining the covid and pm10 dataset
+
+```{r}
+pm10$time <- ymd(pm10$time) # changing the time class
+# left join the two dataset using time and date column
+pm10.cov <- merge(pm10, covid, by.x="time",by.y="date", all.x =T )
+# removing columns with almost zero variance
+pm10.cov <- pm10.cov %>% select(-nearZeroVar(pm10.cov)) 
+# filtering the columns we need
+pm10.cov2 <- pm10.cov %>% select(c(1,9:13))
+# filling NA with 0 for the dates before COVID19
+pm10.cov2[,3:6] <- sapply(pm10.cov2[,3:6], function(x) ifelse(is.na(x),0,x))
+```
+
+#### Correlation matrix
+
+```{r,warning=FALSE,message=FALSE}
+# creating a function to setup the geom_smooth graph of ggpair plot
+my_fn <- function(data, mapping, method="loess", ...){
+  p <- ggplot(data = data, mapping = mapping) + 
+    geom_point() + 
+    geom_smooth(method=method, color="black", ...)
+  p
+}
+
+ggpairs(pm10.cov2[,2:6], aes(color="red", alpha=0.3), lower=list(continuous=my_fn), 
+        upper = list(continuous = wrap("cor", size = 3))) + theme_bw()
+```
+
+#### creating the corrplot
+#### We can see that there is no clear correlation between PM10 and COVID19. The correlation values are close to zero so there is almost zero impact of coronavirus to values of PM10.
+
+```{r}
+cor.pm10 <- cor(pm10.cov2[,2:6])
+corrplot.mixed(cor.pm10)
+```
+
+#### Join the nox and covid database
+
+```{r}
+nox$time <- ymd(nox$time)
+# left join between nox and covid dataset
+nox.cov <- merge(nox, covid, by.x="time",by.y="date", all.x =T )
+nox.cov <- nox.cov %>% select(-nearZeroVar(nox.cov)) 
+nox.cov2 <- nox.cov %>% select(c(1,11:15))
+nox.cov2[,3:6] <- sapply(nox.cov2[,3:6], function(x) ifelse(is.na(x),0,x))
+```
+
+#### Correlation matrix between mean value of NOx and COVID19 values
+
+```{r,warning=FALSE,message=FALSE}
+ggpairs(nox.cov2[,2:6], aes(color="red", alpha=0.3), lower=list(continuous=my_fn), 
+        upper = list(continuous = wrap("cor", size = 3))) + theme_bw()
+```
+
+#### We can see that we have a negative correlation between NOx value and total cases of coronavirus. That negative correlation means that when total cases increase the NOx mean value descreases. So there is COVID19 impact in the NOx values.
+
+```{r}
+cor.nox <- cor(nox.cov2[,2:6])
+corrplot.mixed(cor.nox)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
